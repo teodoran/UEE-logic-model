@@ -5,13 +5,14 @@
 	<script type="text/javascript" src="http://documentcloud.github.com/underscore/underscore-min.js"></script>
 	<script type="text/javascript" src="keyboard-controller.js"></script>
 	<link rel="stylesheet" type="text/css" href="model-style.css" />
-	<title>Escape</title>
+	<title>UEE model test</title>
 	<script type="text/coffeescript">
 		makeEntity = (x, y, speed, player) ->
 			entity = 
 				x: x
 				y: y
 				speed: speed
+				heading: Math.PI/2
 				
 		winHeight = window.innerHeight
 		winWidth = window.innerWidth
@@ -48,17 +49,28 @@
 				when 38 then moveEntity player, 0, -player.speed
 				when 39 then moveEntity player, player.speed, 0
 				when 40 then moveEntity player, 0, player.speed
+
+		turnTorpedo = (keyCode) ->
+			turnAngle = Math.PI/16
+			switch keyCode
+				when 37 then turnEntity player, turnAngle
+				when 40 then turnEntity player, turnAngle
 				
 		moveEnemies = (enemies) ->
 			for enemy in enemies
 				moveEntity enemy, (player.x-enemy.x)*0.07, (player.y-enemy.y)*0.07			
 		
+		turnEntity = (entity, rudderAngle) ->
+			entity.heading += rudderAngle
+			entity.x += entity.speed*Math.cos(entity.heading)
+			entity.y += entity.speed*Math.sin(entity.heading)
+
 		moveEntity = (entity, diffX, diffY) ->
 			entity.x += diffX
 			entity.y += diffY
 		
 		initialize = (enemies) ->
-			spawnEnemy enemies, winWidth, winHeight
+			#spawnEnemy enemies, winWidth, winHeight
 			run = true
 			
 		drawScreen = (board) ->
@@ -108,10 +120,10 @@
 		gameLoop = (board) ->
 			$("#score").text score += 1
 			#update enemies
-			if score >= 300
-				enemySpawnRate = 200
-			if (score % enemySpawnRate) is 0
-				spawnEnemy enemies, winWidth, winHeight
+			#if score >= 300
+			#	enemySpawnRate = 200
+			#if (score % enemySpawnRate) is 0
+			#	spawnEnemy enemies, winWidth, winHeight
 			checkCollisions enemies, player
 			moveEnemies enemies
 			drawScreen board
