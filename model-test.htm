@@ -13,129 +13,60 @@
 				y: y
 				speed: speed
 				heading: Math.PI/2
+				rudderAngle: 0.0
 				
 		winHeight = window.innerHeight
 		winWidth = window.innerWidth
 		score = 0
-		enemySpawnRate = 50
-		player = makeEntity winWidth*0.5, winHeight*0.5, 5
-		enemies = []
+		player = makeEntity winWidth*0.5, winHeight*0.5, 4
 		run = false
-		
-		spawnEnemy = (enemies) ->
-			newEnemy = makeEntity 0, 0, score
-			enemies[enemies.length] = setRandomEnemyStart newEnemy 
-			
-		setRandomEnemyStart = (enemy) ->
-			side = Math.floor(Math.random()*4)
-			switch side
-				when 0
-					enemy.x = -100
-					enemy.y = Math.random()*winHeight
-				when 1 
-					enemy.x = Math.random()*winWidth
-					enemy.y = -100
-				when 2 
-					enemy.x = 100 + winWidth
-					enemy.y = Math.random()*winHeight
-				when 3 
-					enemy.x = Math.random()*winWidth
-					enemy.y = 100 + winHeight
-			return enemy
-	
-		movePlayer = (keyCode) ->
-			switch keyCode
-				when 37 then moveEntity player, -player.speed, 0
-				when 38 then moveEntity player, 0, -player.speed
-				when 39 then moveEntity player, player.speed, 0
-				when 40 then moveEntity player, 0, player.speed
 
-		turnTorpedo = (keyCode) ->
-			turnAngle = Math.PI/16
+		movePlayer = (keyCode) ->
+			turnAngle = Math.PI/32
 			switch keyCode
 				when 37 then turnEntity player, turnAngle
-				when 40 then turnEntity player, turnAngle
-				
-		moveEnemies = (enemies) ->
-			for enemy in enemies
-				moveEntity enemy, (player.x-enemy.x)*0.07, (player.y-enemy.y)*0.07			
+				when 39 then turnEntity player, -turnAngle
+
+		turnRudder = (keyCode) ->
+			turnAngle = Math.PI/128
+			maxTurnAngle = Math.PI/32
+			switch keyCode
+				when 37 then if player.rudderAngle + turnAngle < maxTurnAngle 
+								player.rudderAngle += turnAngle
+				when 39 then if player.rudderAngle - turnAngle > -maxTurnAngle
+								player.rudderAngle -= turnAngle
 		
 		turnEntity = (entity, rudderAngle) ->
 			entity.heading += rudderAngle
 			entity.x += entity.speed*Math.cos(entity.heading)
 			entity.y += entity.speed*Math.sin(entity.heading)
 
-		moveEntity = (entity, diffX, diffY) ->
-			entity.x += diffX
-			entity.y += diffY
-		
-		initialize = (enemies) ->
-			#spawnEnemy enemies, winWidth, winHeight
-			run = true
+		moveEntity = (entity, rudderAngle) ->
+			entity.heading += rudderAngle
+			entity.x += entity.speed*Math.cos(entity.heading)
+			entity.y += entity.speed*Math.sin(entity.heading)
 			
+		moveTorpedo = (entity) ->
+			entity.heading += entity.rudderAngle
+			entity.x += entity.speed*Math.cos(entity.heading)
+			entity.y += entity.speed*Math.sin(entity.heading)
+
 		drawScreen = (board) ->
 			do board.children().remove
-			for enemy in enemies
-				board.append "<div class=\"enemy\" style=\"left:"+enemy.x+"px; top:"+enemy.y+"px;\">"	
-			board.append "<div class=\"player\" style=\"left:"+player.x+"px; top:"+player.y+"px;\">"
-
-		drawHighscore = (board) ->
-			board.append "<form action=\"highscoreRegister.jsp\" method=\"post\" style=\"left:"+(winWidth*0.5-150)+"px; top:"+(winHeight*0.5-100)+"px;\">
-							<p><h2>Add to highscore</h2></p>
-							<p>Score: "+score+"</p>
-							<p>Name: <input type=\"text\" name=\"navn\" value=\"\"><input type=\"submit\" value=\"apply\"></p>
-							<input id=\"scoreValue\" name=\"scoreValue\" type=\"hidden\" value=\""+score+"\">
-							<p><a href=\"index.htm\">Play again</a> <a href=\"highscore.jsp\">View highscore</a></p>
-						</form>"
-
-		update = (enemies) ->
-			#moveEnemies enemies
-			KeyboardController { 
-				37: (-> movePlayer 37), 
-				38: (-> movePlayer 38), 
-				39: (-> movePlayer 39), 
-				40: (-> movePlayer 40) }, 24
-
-		hasCollided = (enemy, player) ->
-			diffX = (player.x-enemy.x)
-			diffY = (player.y-enemy.y)
-			hasNotCollidedX = diffX*diffX <= 110
-			hasNotCollidedY = diffY*diffY <= 110
-			hasNotCollidedX and hasNotCollidedY
-			
-		playerHitWall = (player) ->
-			player.x <= 0 or player.y <= 0 or player.x >= winWidth or player.y >= winHeight
-
-		checkCollisions = (enemies, player) ->
-			if playerHitWall player
-				run = false
-			for enemy in enemies
-				if hasCollided player, enemy
-					run = false
-				for otherEnemy in enemies
-					if (hasCollided enemy, otherEnemy) and (enemy.speed isnt otherEnemy.speed)
-						enemy = setRandomEnemyStart enemy
-						otherEnemy = setRandomEnemyStart otherEnemy			
+			board.append "<div class=\"player\" style=\"left:"+player.x+"px; top:"+player.y+"px;\">"	
 						
 		gameLoop = (board) ->
 			$("#score").text score += 1
-			#update enemies
-			#if score >= 300
-			#	enemySpawnRate = 200
-			#if (score % enemySpawnRate) is 0
-			#	spawnEnemy enemies, winWidth, winHeight
-			checkCollisions enemies, player
-			moveEnemies enemies
+			moveTorpedo player
 			drawScreen board
 			if run
 				setTimeout (-> gameLoop board), 24
-			else
-				drawHighscore board
-				$("#endText").text "Game over"
 
 		$ ->
-			initialize enemies, run
-			update enemies
+			run = true
+			KeyboardController { 
+				37: (-> turnRudder 37), 
+				39: (-> turnRudder 39)}, 24
 			gameLoop $("#board")		
 	      
 	</script>
