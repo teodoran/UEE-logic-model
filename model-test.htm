@@ -20,6 +20,7 @@
 				speed: 4.0
 				heading: Math.PI/2
 				rudderAngle: 0.0
+				prevSignal: 0.0
 
 		winHeight = window.innerHeight
 		winWidth = window.innerWidth
@@ -27,9 +28,22 @@
 		run = false
 
 		torpedo = makeEntity winWidth*0.5, winHeight*0.5
-		beacon = makeBeacon 400, 300, 300
+		beacon = makeBeacon 500, 500, 600
 
 		radToDeg = (radian) -> return radian*(180/Math.PI)
+
+		distance = (entity1, entity2) ->
+			dx = entity2.x - entity1.x
+			dy = entity2.y - entity1.y
+			return Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2))
+
+		signalStrength = (torpedo, beacon) ->
+			if (distance torpedo, beacon) > beacon.range
+				return 0
+			if (distance torpedo, beacon) < 1
+				return Math.pow(beacon.range,2)
+			return Math.pow(beacon.range,2)*(1/Math.pow((distance torpedo, beacon),2))
+
 
 		turnRudder = (keyCode) ->
 			turnAngle = Math.PI/256
@@ -39,7 +53,13 @@
 								torpedo.rudderAngle += turnAngle
 				when 37 then if torpedo.rudderAngle - turnAngle > -maxTurnAngle
 								torpedo.rudderAngle -= turnAngle
-			
+		
+		autoTurnRudder = (torpedo, beacon) ->
+			signal = signalStrength torpedo, beacon
+			if torpedo.prevSignal > signal
+				torpedo.rudderAngle = torpedo.rudderAngle*-1
+			torpedo.prevSignal = signal  
+
 		moveTorpedo = (entity) ->
 			entity.heading += entity.rudderAngle
 			entity.x += entity.speed*Math.cos(entity.heading)
@@ -48,11 +68,14 @@
 		drawScreen = (board) ->
 			do board.children().remove
 			board.append "<div class=\"torpedo\" style=\"left:"+torpedo.x+"px; top:"+torpedo.y+"px; -webkit-transform: rotate("+torpedo.heading+"rad);\">"
-			board.append "<div class=\"beacon\" style=\"width:"+beacon.range*2+"px; height:"+beacon.range*2+"px; border-radius:"+beacon.range+"px; left:"+beacon.x+"px; top:"+beacon.y+"px;\">"
+			board.append "<div class=\"beacon\" style=\" left:"+(beacon.x-beacon.range)+"px; top:"+(beacon.y-beacon.range)+"px; width:"+beacon.range*2+"px; height:"+beacon.range*2+"px; border-radius:"+beacon.range+"px;\">"
 
 		gameLoop = (board) ->
 			$("#step").text step += 1
-			$("#rudderAng").text radToDeg torpedo.rudderAngle
+			$("#distance").text Math.round(distance torpedo, beacon)
+			$("#signalStrength").text Math.round(signalStrength torpedo, beacon)
+			$("#rudderAngle").text Math.round(radToDeg torpedo.rudderAngle)
+			autoTurnRudder torpedo, beacon
 			moveTorpedo torpedo
 			drawScreen board
 			if run
@@ -69,8 +92,11 @@
 </head>
 
 <body>
-	<p>step: <span id="step"></span></p>
-	<p>rudderAng: <span id="rudderAng"></span></p>
-	<div id="board">
-	</div>
+	<div class="info">
+		<p>step: <span id="step"></span></p>
+		<p>distance: <span id="distance"></span></p>
+		<p>signalStrength: <span id="signalStrength"></span></p>
+		<p>rudderAngle: <span id="rudderAngle"></span></p>
+	</div>	
+	<div id="board"></div>
 </body>

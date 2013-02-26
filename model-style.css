@@ -5,6 +5,11 @@ body {
 	overflow: hidden;
 }
 
+.info {
+	position: absolute;
+	z-index: 10;
+}
+
 .torpedo {
 	width: 20px;
 	height: 5px;
