@@ -8,6 +8,7 @@
 	<title>UEE model test</title>
 	<script type="text/coffeescript">
 		makeBeacon = (x, y, range) ->
+			beacon = 
 				x: x
 				y: y
 				range: range
@@ -19,12 +20,14 @@
 				speed: 4.0
 				heading: Math.PI/2
 				rudderAngle: 0.0
-				
+
 		winHeight = window.innerHeight
 		winWidth = window.innerWidth
 		step = 0
-		torpedo = makeEntity winWidth*0.5, winHeight*0.5
 		run = false
+
+		torpedo = makeEntity winWidth*0.5, winHeight*0.5
+		beacon = makeBeacon 400, 300, 300
 
 		radToDeg = (radian) -> return radian*(180/Math.PI)
 
@@ -44,8 +47,9 @@
 
 		drawScreen = (board) ->
 			do board.children().remove
-			board.append "<div class=\"torpedo\" style=\"left:"+torpedo.x+"px; top:"+torpedo.y+"px; -webkit-transform: rotate("+torpedo.heading+"rad);\">"	
-						
+			board.append "<div class=\"torpedo\" style=\"left:"+torpedo.x+"px; top:"+torpedo.y+"px; -webkit-transform: rotate("+torpedo.heading+"rad);\">"
+			board.append "<div class=\"beacon\" style=\"width:"+beacon.range*2+"px; height:"+beacon.range*2+"px; border-radius:"+beacon.range+"px; left:"+beacon.x+"px; top:"+beacon.y+"px;\">"
+
 		gameLoop = (board) ->
 			$("#step").text step += 1
 			$("#rudderAng").text radToDeg torpedo.rudderAngle
@@ -69,6 +73,4 @@
 	<p>rudderAng: <span id="rudderAng"></span></p>
 	<div id="board">
 	</div>
-	<div class="beacon"></div>
-	
 </body>

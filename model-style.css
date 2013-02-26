@@ -13,12 +13,7 @@ body {
 }
 
 .beacon {
-	width: 200px;
-	height: 200px;
-	border-radius:100px;
 	position: absolute;
 	background-image: -webkit-radial-gradient(circle, white, black);
 	opacity: 0.5;
-	left: 200px;
-	top: 200px;
 }
