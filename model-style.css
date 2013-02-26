@@ -1,24 +1,24 @@
-body{
+body {
 	font-family: Arial, sans-serif;
 	color: white;
 	background-color: black;
 	overflow: hidden;
 }
 
-form{
+.torpedo {
+	width: 20px;
+	height: 5px;
 	position: absolute;
-}
-
-.player, .enemy{
-	width: 10px;
-	height: 10px;
-	position: absolute;
-}
-
-.player{
 	background-color: red;
 }
 
-.enemy{
-	background-color: blue;
+.beacon {
+	width: 200px;
+	height: 200px;
+	border-radius:100px;
+	position: absolute;
+	background-image: -webkit-radial-gradient(circle, white, black);
+	opacity: 0.5;
+	left: 200px;
+	top: 200px;
 }

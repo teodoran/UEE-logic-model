@@ -7,44 +7,35 @@
 	<link rel="stylesheet" type="text/css" href="model-style.css" />
 	<title>UEE model test</title>
 	<script type="text/coffeescript">
-		makeEntity = (x, y, speed, player) ->
+		makeBeacon = (x, y, range) ->
+				x: x
+				y: y
+				range: range
+
+		makeEntity = (x, y) ->
 			entity = 
 				x: x
 				y: y
-				speed: speed
+				speed: 4.0
 				heading: Math.PI/2
 				rudderAngle: 0.0
 				
 		winHeight = window.innerHeight
 		winWidth = window.innerWidth
-		score = 0
-		player = makeEntity winWidth*0.5, winHeight*0.5, 4
+		step = 0
+		torpedo = makeEntity winWidth*0.5, winHeight*0.5
 		run = false
 
-		movePlayer = (keyCode) ->
-			turnAngle = Math.PI/32
-			switch keyCode
-				when 37 then turnEntity player, turnAngle
-				when 39 then turnEntity player, -turnAngle
+		radToDeg = (radian) -> return radian*(180/Math.PI)
 
 		turnRudder = (keyCode) ->
-			turnAngle = Math.PI/128
+			turnAngle = Math.PI/256
 			maxTurnAngle = Math.PI/32
 			switch keyCode
-				when 37 then if player.rudderAngle + turnAngle < maxTurnAngle 
-								player.rudderAngle += turnAngle
-				when 39 then if player.rudderAngle - turnAngle > -maxTurnAngle
-								player.rudderAngle -= turnAngle
-		
-		turnEntity = (entity, rudderAngle) ->
-			entity.heading += rudderAngle
-			entity.x += entity.speed*Math.cos(entity.heading)
-			entity.y += entity.speed*Math.sin(entity.heading)
-
-		moveEntity = (entity, rudderAngle) ->
-			entity.heading += rudderAngle
-			entity.x += entity.speed*Math.cos(entity.heading)
-			entity.y += entity.speed*Math.sin(entity.heading)
+				when 39 then if torpedo.rudderAngle + turnAngle < maxTurnAngle 
+								torpedo.rudderAngle += turnAngle
+				when 37 then if torpedo.rudderAngle - turnAngle > -maxTurnAngle
+								torpedo.rudderAngle -= turnAngle
 			
 		moveTorpedo = (entity) ->
 			entity.heading += entity.rudderAngle
@@ -53,11 +44,12 @@
 
 		drawScreen = (board) ->
 			do board.children().remove
-			board.append "<div class=\"player\" style=\"left:"+player.x+"px; top:"+player.y+"px;\">"	
+			board.append "<div class=\"torpedo\" style=\"left:"+torpedo.x+"px; top:"+torpedo.y+"px; -webkit-transform: rotate("+torpedo.heading+"rad);\">"	
 						
 		gameLoop = (board) ->
-			$("#score").text score += 1
-			moveTorpedo player
+			$("#step").text step += 1
+			$("#rudderAng").text radToDeg torpedo.rudderAngle
+			moveTorpedo torpedo
 			drawScreen board
 			if run
 				setTimeout (-> gameLoop board), 24
@@ -73,7 +65,10 @@
 </head>
 
 <body>
-	<span id="score"></span>
-	<span id="endText"></span>
-	<div id="board"></div>
+	<p>step: <span id="step"></span></p>
+	<p>rudderAng: <span id="rudderAng"></span></p>
+	<div id="board">
+	</div>
+	<div class="beacon"></div>
+	
 </body>
