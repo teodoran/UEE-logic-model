@@ -7,6 +7,13 @@
 	<link rel="stylesheet" type="text/css" href="model-style.css" />
 	<title>UEE model test</title>
 	<script type="text/coffeescript">
+		makeSearch = (x, y, maxTurnAngle, boatAngle) ->
+			search =
+				x: x
+				y: y
+				turnAngle: maxTurnAngle
+				prevBoatAngle: boatAngle
+
 		makeBeacon = (x, y, range) ->
 			beacon = 
 				x: x
@@ -26,9 +33,13 @@
 		winWidth = window.innerWidth
 		step = 0
 		run = false
+		maxTurnAngle = Math.PI/32
 
-		torpedo = makeEntity winWidth*0.5, winHeight*0.5
-		beacon = makeBeacon 500, 500, 600
+		torpedo = makeEntity winWidth*0.65, winHeight*0.5
+		beacon = makeBeacon 500, 500, 400
+		search = makeSearch torpedo.x, torpedo.y, maxTurnAngle, torpedo.heading
+		signalData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+		meanSignal = [0, 0]
 
 		radToDeg = (radian) -> return radian*(180/Math.PI)
 
@@ -44,21 +55,33 @@
 				return Math.pow(beacon.range,2)
 			return Math.pow(beacon.range,2)*(1/Math.pow((distance torpedo, beacon),2))
 
-
 		turnRudder = (keyCode) ->
 			turnAngle = Math.PI/256
-			maxTurnAngle = Math.PI/32
 			switch keyCode
 				when 39 then if torpedo.rudderAngle + turnAngle < maxTurnAngle 
 								torpedo.rudderAngle += turnAngle
 				when 37 then if torpedo.rudderAngle - turnAngle > -maxTurnAngle
 								torpedo.rudderAngle -= turnAngle
-		
+
+		updateSearch = (search, torpedo) ->
+			r = distance torpedo, search
+			search.turnAngle = search.turnAngle*(1 - (1/(r*0.01+10)))
+
 		autoTurnRudder = (torpedo, beacon) ->
-			signal = signalStrength torpedo, beacon
-			if torpedo.prevSignal > signal
-				torpedo.rudderAngle = torpedo.rudderAngle*-1
-			torpedo.prevSignal = signal  
+			if (signalStrength torpedo, beacon) > 400
+				console.log("False!")
+				run = false
+			if (step % 15) == 0
+				meanSignal.shift()
+				meanSignal.push(signalStrength torpedo, beacon)
+				console.log(meanSignal)
+				if meanSignal[0] <= 0
+					updateSearch search, torpedo
+					torpedo.rudderAngle = search.turnAngle
+				if meanSignal[1] > meanSignal[0]
+					torpedo.rudderAngle = 0
+				if meanSignal[1] < meanSignal[0]
+					torpedo.rudderAngle = -maxTurnAngle
 
 		moveTorpedo = (entity) ->
 			entity.heading += entity.rudderAngle
